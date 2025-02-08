@@ -1,0 +1,37 @@
+{
+  "frames": {
+    "bear.png": { "frame": { "x": 272, "y": 272, "w": 136, "h": 136 } },
+    "buffalo.png": { "frame": { "x": 544, "y": 544, "w": 136, "h": 136 } },
+    "chick.png": { "frame": { "x": 544, "y": 408, "w": 136, "h": 136 } },
+    "chicken.png": { "frame": { "x": 544, "y": 272, "w": 136, "h": 136 } },
+    "cow.png": { "frame": { "x": 544, "y": 136, "w": 136, "h": 136 } },
+    "crocodile.png": { "frame": { "x": 544, "y": 0, "w": 136, "h": 136 } },
+    "dog.png": { "frame": { "x": 408, "y": 680, "w": 136, "h": 136 } },
+    "duck.png": { "frame": { "x": 408, "y": 544, "w": 136, "h": 136 } },
+    "elephant.png": { "frame": { "x": 408, "y": 408, "w": 136, "h": 136 } },
+    "frog.png": { "frame": { "x": 408, "y": 272, "w": 136, "h": 136 } },
+    "giraffe.png": { "frame": { "x": 408, "y": 136, "w": 136, "h": 136 } },
+    "goat.png": { "frame": { "x": 408, "y": 0, "w": 136, "h": 136 } },
+    "gorilla.png": { "frame": { "x": 272, "y": 680, "w": 136, "h": 136 } },
+    "hippo.png": { "frame": { "x": 272, "y": 544, "w": 136, "h": 136 } },
+    "horse.png": { "frame": { "x": 272, "y": 408, "w": 136, "h": 136 } },
+    "monkey.png": { "frame": { "x": 544, "y": 680, "w": 136, "h": 136 } },
+    "moose.png": { "frame": { "x": 272, "y": 136, "w": 136, "h": 136 } },
+    "narwhal.png": { "frame": { "x": 272, "y": 0, "w": 136, "h": 136 } },
+    "owl.png": { "frame": { "x": 136, "y": 680, "w": 136, "h": 136 } },
+    "panda.png": { "frame": { "x": 136, "y": 544, "w": 136, "h": 136 } },
+    "parrot.png": { "frame": { "x": 136, "y": 408, "w": 136, "h": 136 } },
+    "penguin.png": { "frame": { "x": 136, "y": 272, "w": 136, "h": 136 } },
+    "pig.png": { "frame": { "x": 136, "y": 136, "w": 136, "h": 136 } },
+    "rabbit.png": { "frame": { "x": 136, "y": 0, "w": 136, "h": 136 } },
+    "rhino.png": { "frame": { "x": 0, "y": 680, "w": 136, "h": 136 } },
+    "sloth.png": { "frame": { "x": 0, "y": 544, "w": 136, "h": 136 } },
+    "snake.png": { "frame": { "x": 0, "y": 408, "w": 136, "h": 136 } },
+    "walrus.png": { "frame": { "x": 0, "y": 272, "w": 136, "h": 136 } },
+    "whale.png": { "frame": { "x": 0, "y": 136, "w": 136, "h": 136 } },
+    "zebra.png": { "frame": { "x": 0, "y": 0, "w": 136, "h": 136 } }
+  },
+  "meta": {
+    "image": "spritesheet.png"
+  }
+}
