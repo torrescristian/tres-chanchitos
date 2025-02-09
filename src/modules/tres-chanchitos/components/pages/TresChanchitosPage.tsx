@@ -2,10 +2,8 @@ import { useEffect, useRef } from "react";
 import { Application, Assets, Spritesheet } from "pixi.js";
 
 import { BlockTypes } from "../molecules/Block";
-import { SPRITE_SIZE } from "../../../common/libs/consts";
+import { MATCH_SIZE, SPRITE_SIZE } from "../../../common/libs/consts";
 import Match3 from "../organisms/Match3";
-
-const MATCH_SIZE = 8;
 
 export default function TresChanchitosPage() {
   const appRef = useRef<HTMLDivElement>(null);
