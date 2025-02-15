@@ -5,17 +5,12 @@ import {
   Spritesheet,
   FederatedPointerEvent,
 } from "pixi.js";
-import { SPRITE_SIZE } from "../../../common/libs/consts";
 import { Easing, Tween } from "@tweenjs/tween.js";
+
+import { SPRITE_SIZE } from "../../../common/libs/consts";
 import colorlog from "../../../common/libs/colorlog";
 
-export const BlockTypes = [
-  "chick",
-  "crocodile",
-  // "monkey",
-  "parrot",
-  "pig",
-] as const;
+export const BlockTypes = ["chick", "crocodile", "parrot", "pig"] as const;
 
 export type IBlockType = (typeof BlockTypes)[number];
 
@@ -39,7 +34,7 @@ export default class Block {
   public gridY: number;
   public readonly type: string;
 
-  private readonly tween: Tween;
+  private tween: Tween;
   private isDragging = false;
 
   private dragState: {
@@ -69,7 +64,6 @@ export default class Block {
 
     this.gridX = params.gridX;
     this.gridY = params.gridY;
-
     this.type = params.type;
 
     // init sprite
@@ -95,7 +89,7 @@ export default class Block {
   private determineDragDirection(delta: Point) {
     if (!this.dragState) return;
 
-    const threshold = SPRITE_SIZE * 0.3;
+    const threshold = SPRITE_SIZE * 0.05;
     const absDeltaX = Math.abs(delta.x);
     const absDeltaY = Math.abs(delta.y);
 
@@ -107,7 +101,7 @@ export default class Block {
     }
   }
 
-  private readonly startDrag = (event: FederatedPointerEvent) => {
+  private startDrag(event: FederatedPointerEvent) {
     this.isDragging = true;
 
     const globalPos = new Point(event.globalX, event.globalY);
@@ -126,15 +120,15 @@ export default class Block {
       currentDrag: 0,
     };
 
-    this.sprite.zIndex = 100;
+    this.sprite.zIndex = 10;
     this.params.app.stage.interactive = true;
     this.params.app.stage.eventMode = "static";
     this.params.app.stage.on("pointermove", this.handleDrag);
     this.params.app.stage.on("pointerup", this.endDrag);
     this.params.app.stage.on("pointerupoutside", this.endDrag);
-  };
+  }
 
-  private readonly handleDrag = (event: FederatedPointerEvent) => {
+  private async handleDrag(event: FederatedPointerEvent) {
     if (!this.isDragging || !this.dragState) return;
 
     const globalPos = new Point(event.globalX, event.globalY);
@@ -158,7 +152,13 @@ export default class Block {
     } else {
       this.handleFreeDrag(localPos);
     }
-  };
+
+    const confirmThreshold = SPRITE_SIZE * 0.3;
+    if (Math.abs(this.dragState.currentDrag) >= confirmThreshold) {
+      this.handleJointDrag(delta);
+      this.endDrag();
+    }
+  }
 
   private handleJointDrag(delta: Point) {
     if (!this.dragState?.adjacentBlock || !this.dragState.direction) return;
@@ -169,6 +169,8 @@ export default class Block {
       Math.min(delta[axis], SPRITE_SIZE)
     );
 
+    // TODO: Si el bloque se mueve en la misma dirección pero sentido contrario
+    // se debe cambiar el bloque adjacente
     this.sprite[axis] = this.dragState.originalPosition[axis] + dragAmount;
     this.dragState.adjacentBlock.sprite[axis] =
       this.dragState.adjacentOriginalPosition![axis] - dragAmount;
@@ -199,37 +201,36 @@ export default class Block {
       );
     }
   }
-  private endDrag() {
+  private async endDrag() {
     if (!this.dragState) return;
 
     this.isDragging = false;
     this.cleanupListeners();
 
     if (this.dragState.direction && this.dragState.adjacentBlock) {
-      this.handleSwapCompletion();
+      await this.handleSwapCompletion();
     } else {
-      this.revertToOriginalPosition();
+      await this.revertToOriginalPosition();
     }
 
     this.dragState = null;
     this.sprite.zIndex = 0;
   }
 
-  private handleSwapCompletion() {
+  private async handleSwapCompletion() {
     if (!this.dragState?.adjacentBlock) return;
 
     const confirmThreshold = SPRITE_SIZE * 0.3;
     if (Math.abs(this.dragState.currentDrag) >= confirmThreshold) {
-      this.commitSwap();
+      await this.commitSwap();
     } else {
-      this.revertSwap();
+      await this.revertSwap();
     }
   }
 
-  private commitSwap() {
+  private async commitSwap() {
     if (!this.dragState?.adjacentBlock) return;
 
-    // Swap grid positions
     [this.gridX, this.dragState.adjacentBlock.gridX] = [
       this.dragState.adjacentBlock.gridX,
       this.gridX,
@@ -240,10 +241,13 @@ export default class Block {
     ];
 
     // Animate to final positions
-    this.animateToGridPosition(this.getPoint());
-    this.dragState.adjacentBlock.animateToGridPosition(
-      this.dragState.adjacentBlock.getPoint()
-    );
+    await Promise.all([
+      this.animateToGridPosition(this.getPoint(), "commitSwap"),
+      this.dragState.adjacentBlock.animateToGridPosition(
+        this.dragState.adjacentBlock.getPoint(),
+        "commitSwap"
+      ),
+    ]);
 
     // Notify parent game
     this.params.onSwap(
@@ -252,44 +256,63 @@ export default class Block {
     );
   }
 
-  private revertSwap() {
+  private async revertSwap() {
     if (!this.dragState?.adjacentBlock) return;
+    colorlog("revertSwap", "cyan");
 
-    this.animateTo(this.dragState.originalPosition);
-    this.dragState.adjacentBlock.animateTo(
-      this.dragState.adjacentOriginalPosition!
+    return Promise.all([
+      this.animateTo(this.dragState.originalPosition),
+      this.dragState.adjacentBlock.animateTo(
+        this.dragState.adjacentOriginalPosition!
+      ),
+    ]);
+  }
+
+  private async revertToOriginalPosition() {
+    await this.animateToGridPosition(
+      this.getPoint(),
+      "revertToOriginalPosition"
     );
   }
 
-  private revertToOriginalPosition() {
-    this.animateToGridPosition(this.getPoint());
+  public async animateToGridPosition(p: Point, source = "") {
+    if (source) {
+      if (source === "revertToOriginalPosition") {
+        colorlog(source, "red");
+      } else if (source === "commitSwap") {
+        colorlog(source, "skyblue");
+      } else if (source === "revertInvalidSwap") {
+        colorlog(source, "orange");
+      } else if (source === "dropNewBlocks") {
+        colorlog(source, "gray");
+      } else {
+        colorlog(source, "turquoise");
+      }
+    }
+    const position = this.gridToPixel(p.x, p.y);
+    console.log(
+      `%c[${this.gridX}->${p.x}] [${this.gridY}->${p.y}]`,
+      this.gridX === p.x && this.gridY === p.y ? `color: gray;` : ""
+    );
+    this.gridX = p.x;
+    this.gridY = p.y;
+    await this.animateTo(position);
   }
 
-  private animateTo(position: Point) {
+  private async animateTo(position: Point) {
     if (this.tween.isPlaying()) return;
 
-    console.log({
-      x: position.x,
-      y: position.y,
+    return new Promise((resolve) => {
+      this.tween = new Tween(this.sprite.position)
+        .to(position, 300)
+        .easing(Easing.Quadratic.In)
+        .onComplete(resolve)
+        .start();
     });
-
-    this.tween.to(position, 300).easing(Easing.Quadratic.Out).start();
   }
 
   public getPoint() {
     return new Point(this.gridX, this.gridY);
-  }
-
-  public animateToGridPosition(p: Point) {
-    const position = this.gridToPixel(p.x, p.y);
-    this.animateTo(position);
-    this.gridX = p.x;
-    this.gridY = p.y;
-
-    // console.log({
-    //   gridX: this.gridX,
-    //   gridY: this.gridY,
-    // });
   }
 
   private gridToPixel(x: number, y: number): Point {

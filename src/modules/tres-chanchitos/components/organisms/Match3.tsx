@@ -1,6 +1,6 @@
 import { Application, Point, Spritesheet } from "pixi.js";
+
 import Block, { IBlockType } from "../molecules/Block";
-import colorlog from "../../../common/libs/colorlog";
 
 interface IMatch3Params {
   size: number;
@@ -15,6 +15,7 @@ export default class Match3 {
   private readonly blocks: IBlockType[];
   private readonly spritesheet: Spritesheet;
   private readonly app: Application;
+  public points: number = 0;
 
   constructor(params: IMatch3Params) {
     this.size = params.size;
@@ -23,8 +24,6 @@ export default class Match3 {
     this.app = params.app;
     this.createBoard = this.createBoard.bind(this);
     this.createBlock = this.createBlock.bind(this);
-    // this.setupBoardInteractions = this.setupBoardInteractions.bind(this);
-    // this.handleBlockClick = this.handleBlockClick.bind(this);
     this.isValidPosition = this.isValidPosition.bind(this);
     this.handleSwap = this.handleSwap.bind(this);
     this.swapBlocks = this.swapBlocks.bind(this);
@@ -38,7 +37,6 @@ export default class Match3 {
     this.destroy = this.destroy.bind(this);
 
     this.board = this.createBoard();
-    // this.setupBoardInteractions();
     this.resolveMatches();
   }
 
@@ -65,27 +63,12 @@ export default class Match3 {
     return this.blocks[Math.floor(Math.random() * this.blocks.length)];
   }
 
-  // private setupBoardInteractions() {
-  //   this.board.forEach((row) =>
-  //     row.forEach((block) => {
-  //       block?.sprite.on("click", () => this.handleBlockClick(block));
-  //     })
-  //   );
-  // }
-
-  // private handleBlockClick(block: Block) {
-  //   console.log("Block clicked at:", block.gridX, block.gridY);
-  // }
-
   private isValidPosition(pos: Point): boolean {
+    // TODO: Validar de que en la nueva posición hace un match 3 valido
     return pos.x >= 0 && pos.y >= 0 && pos.x < this.size && pos.y < this.size;
   }
 
   private handleSwap(position: Point, direction: Point) {
-    console.log({
-      positionY: position.y,
-      directionY: direction.y,
-    });
     const targetPos = new Point(
       position.x + direction.x,
       position.y + direction.y
@@ -128,13 +111,12 @@ export default class Match3 {
     [originalPos, targetPos].forEach((pos) => {
       const block = this.board[pos.y][pos.x];
       if (block) {
-        block.animateToGridPosition(pos);
+        block.animateToGridPosition(pos, "revertInvalidSwap");
       }
     });
   }
 
   private resolveMatches() {
-    colorlog("resolveMatches", "yellow");
     const matches = this.findMatches();
     if (matches.length > 0) {
       this.removeMatches(matches);
@@ -215,6 +197,8 @@ export default class Match3 {
       new Set(matches.map((match) => JSON.stringify(match)))
     ).map((matchStr) => JSON.parse(matchStr));
 
+    this.points += uniqueMatches.length;
+
     uniqueMatches.forEach(([y, x]) => {
       this.board[y][x]?.destroy();
       this.board[y][x] = null;
@@ -241,7 +225,7 @@ export default class Match3 {
       // Update board and animate
       newColumn.forEach((block, y) => {
         this.board[y][x] = block;
-        block.animateToGridPosition(new Point(x, y));
+        block.animateToGridPosition(new Point(x, y), "dropNewBlocks");
       });
     }
   }
