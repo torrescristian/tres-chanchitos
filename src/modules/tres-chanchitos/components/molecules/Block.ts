@@ -9,6 +9,7 @@ import { Easing, Tween } from "@tweenjs/tween.js";
 
 import { SPRITE_SIZE } from "../../../common/libs/consts";
 import colorlog from "../../../common/libs/colorlog";
+import { Howl } from "howler";
 
 export const BlockTypes = ["chick", "crocodile", "parrot", "pig"] as const;
 
@@ -36,6 +37,7 @@ export default class Block {
 
   private tween: Tween;
   private isDragging = false;
+  private readonly sound: Howl;
 
   private dragState: {
     startGrid: Point;
@@ -80,6 +82,12 @@ export default class Block {
     // end init sprite
     this.tween = new Tween(this.sprite.position);
     this.setupInteractions();
+
+    this.sound = new Howl({
+      src: ["sound/die-throw-4.ogg"],
+      // src: ["sound/chips-stack-4.ogg"],
+      volume: 0.1,
+    });
   }
 
   private setupInteractions() {
@@ -242,10 +250,9 @@ export default class Block {
 
     // Animate to final positions
     await Promise.all([
-      this.animateToGridPosition(this.getPoint(), "commitSwap"),
+      this.animateToGridPosition(this.getPoint()),
       this.dragState.adjacentBlock.animateToGridPosition(
-        this.dragState.adjacentBlock.getPoint(),
-        "commitSwap"
+        this.dragState.adjacentBlock.getPoint()
       ),
     ]);
 
@@ -269,31 +276,11 @@ export default class Block {
   }
 
   private async revertToOriginalPosition() {
-    await this.animateToGridPosition(
-      this.getPoint(),
-      "revertToOriginalPosition"
-    );
+    await this.animateToGridPosition(this.getPoint());
   }
 
-  public async animateToGridPosition(p: Point, source = "") {
-    if (source) {
-      if (source === "revertToOriginalPosition") {
-        colorlog(source, "red");
-      } else if (source === "commitSwap") {
-        colorlog(source, "skyblue");
-      } else if (source === "revertInvalidSwap") {
-        colorlog(source, "orange");
-      } else if (source === "dropNewBlocks") {
-        colorlog(source, "gray");
-      } else {
-        colorlog(source, "turquoise");
-      }
-    }
+  public async animateToGridPosition(p: Point) {
     const position = this.gridToPixel(p.x, p.y);
-    console.log(
-      `%c[${this.gridX}->${p.x}] [${this.gridY}->${p.y}]`,
-      this.gridX === p.x && this.gridY === p.y ? `color: gray;` : ""
-    );
     this.gridX = p.x;
     this.gridY = p.y;
     await this.animateTo(position);
@@ -302,13 +289,15 @@ export default class Block {
   private async animateTo(position: Point) {
     if (this.tween.isPlaying()) return;
 
-    return new Promise((resolve) => {
+    await new Promise((resolve) => {
       this.tween = new Tween(this.sprite.position)
         .to(position, 300)
         .easing(Easing.Quadratic.In)
         .onComplete(resolve)
         .start();
     });
+
+    this.sound.play();
   }
 
   public getPoint() {

@@ -9,6 +9,13 @@ interface IMatch3Params {
   app: Application;
 }
 
+interface ScoreEvent {
+  points: number;
+  matches: number[][];
+  type: string;
+  combo: number;
+}
+
 export default class Match3 {
   private board: Array<Array<Block | null>> = [];
   private readonly size: number;
@@ -16,6 +23,8 @@ export default class Match3 {
   private readonly spritesheet: Spritesheet;
   private readonly app: Application;
   public points: number = 0;
+  public combo: number = 0;
+  private onScoreChange?: (score: number, event: ScoreEvent) => void;
 
   constructor(params: IMatch3Params) {
     this.size = params.size;
@@ -35,9 +44,16 @@ export default class Match3 {
     this.removeMatches = this.removeMatches.bind(this);
     this.dropNewBlocks = this.dropNewBlocks.bind(this);
     this.destroy = this.destroy.bind(this);
+    this.calculateScore = this.calculateScore.bind(this);
 
     this.board = this.createBoard();
     this.resolveMatches();
+  }
+
+  public setScoreCallback(
+    callback: (score: number, event: ScoreEvent) => void
+  ) {
+    this.onScoreChange = callback;
   }
 
   private createBoard(): Array<Array<Block | null>> {
@@ -111,7 +127,7 @@ export default class Match3 {
     [originalPos, targetPos].forEach((pos) => {
       const block = this.board[pos.y][pos.x];
       if (block) {
-        block.animateToGridPosition(pos, "revertInvalidSwap");
+        block.animateToGridPosition(pos);
       }
     });
   }
@@ -119,9 +135,12 @@ export default class Match3 {
   private resolveMatches() {
     const matches = this.findMatches();
     if (matches.length > 0) {
+      this.combo++;
       this.removeMatches(matches);
       this.dropNewBlocks();
-      setTimeout(() => this.resolveMatches(), 1000);
+      setTimeout(() => this.resolveMatches(), 500);
+    } else {
+      this.combo = 0;
     }
   }
 
@@ -197,12 +216,91 @@ export default class Match3 {
       new Set(matches.map((match) => JSON.stringify(match)))
     ).map((matchStr) => JSON.parse(matchStr));
 
-    this.points += uniqueMatches.length;
+    // Calcular puntaje basado en la escala mejorada
+    const scoreEvent = this.calculateScore(uniqueMatches);
+    this.points += scoreEvent.points;
+
+    // Notificar cambio de puntaje
+    if (this.onScoreChange) {
+      this.onScoreChange(this.points, scoreEvent);
+    }
 
     uniqueMatches.forEach(([y, x]) => {
       this.board[y][x]?.destroy();
       this.board[y][x] = null;
     });
+  }
+
+  private calculateScore(matches: number[][]): ScoreEvent {
+    let totalPoints = 0;
+    const matchesByType: { [key: string]: number[][] } = {};
+
+    // Agrupar matches por tipo de animal
+    matches.forEach(([y, x]) => {
+      const block = this.board[y]?.[x];
+      if (block) {
+        const type = block.type;
+        if (!matchesByType[type]) {
+          matchesByType[type] = [];
+        }
+        matchesByType[type].push([y, x]);
+      }
+    });
+
+    let bestType = "";
+    let maxMatches = 0;
+
+    // Calcular puntos por cada tipo
+    Object.entries(matchesByType).forEach(([type, typeMatches]) => {
+      if (typeMatches.length > maxMatches) {
+        maxMatches = typeMatches.length;
+        bestType = type;
+      }
+
+      const basePoints = this.getAnimalPoints(type);
+      const matchLength = typeMatches.length;
+
+      // Escala de puntos por tamaño de combinación
+      let multiplier = 1;
+      if (matchLength >= 3 && matchLength <= 4) multiplier = 1;
+      else if (matchLength >= 5 && matchLength <= 6) multiplier = 2;
+      else if (matchLength >= 7 && matchLength <= 8) multiplier = 3;
+      else if (matchLength >= 9) multiplier = 5;
+
+      // Bonus por combo
+      const comboBonus = this.combo > 1 ? Math.floor(this.combo * 0.5) : 0;
+
+      const typePoints =
+        basePoints * matchLength * multiplier + basePoints * comboBonus;
+      totalPoints += typePoints;
+    });
+
+    return {
+      points: totalPoints,
+      matches,
+      type: bestType,
+      combo: this.combo,
+    };
+  }
+
+  private getAnimalPoints(type: string): number {
+    // Escala de puntos por tipo de animal (temática de "valor" del animal)
+    const animalValues: { [key: string]: number } = {
+      chick: 10, // Pollitos - básico
+      pig: 15, // Chanchitos - protagonistas del juego
+      parrot: 20, // Loros - coloridos
+      crocodile: 25, // Cocodrilos - más raros
+    };
+
+    return animalValues[type] || 10;
+  }
+
+  public getScore(): number {
+    return this.points;
+  }
+
+  public getCombo(): number {
+    return this.combo;
   }
 
   private dropNewBlocks() {
@@ -225,7 +323,7 @@ export default class Match3 {
       // Update board and animate
       newColumn.forEach((block, y) => {
         this.board[y][x] = block;
-        block.animateToGridPosition(new Point(x, y), "dropNewBlocks");
+        block.animateToGridPosition(new Point(x, y));
       });
     }
   }

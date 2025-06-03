@@ -1,50 +1,119 @@
-# React + TypeScript + Vite
+# 🐷 Tres Chanchitos - Juego de Puzzle
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Un divertido juego de puzzle tipo match-3 construido con React, TypeScript y PIXI.js.
 
-Currently, two official plugins are available:
+## 🎮 Descripción del Juego
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+**Tres Chanchitos** es un emocionante juego de puzzle donde tu objetivo es conectar 5 o más bloques del mismo tipo para ganar puntos. Inspirado en los clásicos juegos match-3, pero con un twist único.
 
-## Expanding the ESLint configuration
+### Características:
+- 🎯 **Mecánica Simple**: Haz clic en un bloque y luego en otro adyacente para intercambiarlos
+- 🔗 **Conexiones**: Conecta 5 o más bloques del mismo tipo para eliminarlos
+- 🎨 **Gráficos Coloridos**: Personajes adorables con animaciones fluidas
+- 🔊 **Efectos de Sonido**: Audio inmersivo para una mejor experiencia
+- 📱 **Responsive**: Funciona perfecto en desktop y móvil
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+## 🛠️ Tecnologías Utilizadas
 
-- Configure the top-level `parserOptions` property like this:
+- **React 18** - Framework frontend
+- **TypeScript** - Tipado estático
+- **PIXI.js** - Renderizado 2D de alto rendimiento
+- **Tailwind CSS** - Estilos y diseño responsive
+- **Vite** - Build tool y dev server
+- **Howler.js** - Manejo de audio
+- **Tween.js** - Animaciones suaves
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## 🚀 Instalación y Uso
+
+### Prerrequisitos
+- Node.js (versión 16 o superior)
+- Yarn o npm
+
+### Pasos:
+
+1. **Clona el repositorio**
+   ```bash
+   git clone [tu-repositorio]
+   cd game-projects
+   ```
+
+2. **Instala las dependencias**
+   ```bash
+   yarn install
+   # o
+   npm install
+   ```
+
+3. **Inicia el servidor de desarrollo**
+   ```bash
+   yarn dev
+   # o
+   npm run dev
+   ```
+
+4. **Abre tu navegador**
+   Ve a `http://localhost:5173` para jugar
+
+## 🎲 Cómo Jugar
+
+1. **Selecciona un bloque**: Haz clic en cualquier bloque del tablero
+2. **Intercambia**: Haz clic en un bloque adyacente (arriba, abajo, izquierda o derecha)
+3. **Forma grupos**: Trata de crear grupos de 5 o más bloques del mismo tipo
+4. **Gana puntos**: Los grupos se eliminarán automáticamente y ganarás puntos
+5. **¡Sigue jugando**: El tablero se rellenará con nuevos bloques
+
+## 🏗️ Estructura del Proyecto
+
+```
+src/
+├── modules/
+│   ├── common/           # Componentes y utilidades compartidas
+│   ├── landing/          # Página principal del juego
+│   └── tres-chanchitos/  # Lógica del juego
+│       ├── components/
+│       │   ├── molecules/ # Componente Block
+│       │   └── organisms/ # Componente Match3
+public/                   # Recursos estáticos (spritesheets, sonidos)
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+## 🔧 Scripts Disponibles
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+- `yarn dev` - Inicia el servidor de desarrollo
+- `yarn build` - Construye la aplicación para producción
+- `yarn preview` - Previsualiza la build de producción
+- `yarn lint` - Ejecuta el linter de código
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+## 📦 Build para Producción
+
+```bash
+yarn build
 ```
+
+Los archivos optimizados se generarán en la carpeta `dist/`.
+
+## 🎨 Personalización
+
+El juego es fácilmente personalizable:
+
+- **Personajes**: Modifica los sprites en `/public/spritesheet.json`
+- **Tamaño del tablero**: Cambia `MATCH_SIZE` en `src/modules/common/libs/consts.ts`
+- **Estilos**: Ajusta los colores y diseño en `GameLandingPage.tsx`
+- **Sonidos**: Reemplaza los archivos de audio en `/public/sound/`
+
+## 🤝 Contribuir
+
+¡Las contribuciones son bienvenidas! Si tienes ideas para mejorar el juego:
+
+1. Haz fork del proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/nueva-caracteristica`)
+3. Commit tus cambios (`git commit -am 'Añade nueva característica'`)
+4. Push a la rama (`git push origin feature/nueva-caracteristica`)
+5. Abre un Pull Request
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
+
+---
+
+**¡Diviértete jugando Tres Chanchitos! 🐷🎮**
